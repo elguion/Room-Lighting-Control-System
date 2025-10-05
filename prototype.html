@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Intelligent Lighting Control System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', sans-serif;
+            background: #ffffff;
+            color: #1a1a1a;
+            line-height: 1.6;
+            letter-spacing: -0.003em;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: #000000;
+            border-bottom: 1px solid #e0e0e0;
+            padding: 24px 48px;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header h1 {
+            font-size: 21px;
+            font-weight: 600;
+            color: #ffffff;
+            letter-spacing: -0.5px;
+        }
+
+        .header p {
+            font-size: 14px;
+            color: #a0a0a0;
+            margin-top: 4px;
+            font-weight: 400;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 320px 1fr 380px;
+            gap: 0;
+            min-height: calc(100vh - 73px);
+        }
+
+        .panel {
+            padding: 32px;
+            border-right: 1px solid #e0e0e0;
+        }
+
+        .panel:last-child {
+            border-right: none;
+        }
+
+        .panel-left {
+            background: #fafafa;
+        }
+
+        .panel-center {
+            background: #ffffff;
+        }
+
+        .panel-right {
+            background: #fafafa;
+        }
+
+        .section-title {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #6b6b6b;
+            margin-bottom: 20px;
+        }
+
+        .component-card {
+            background: #ffffff;
+            border: 1px solid #e0e0e0;
+            padding: 16px;
+            margin-bottom: 12px;
+            transition: border-color 0.2s ease;
+        }
+
+        .component-card:hover {
+            border-color: #1a1a1a;
+        }
+
+        .component-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .component-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1a1a1a;
+        }
+
+        .status-badge {
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 4px 8px;
+            border-radius: 2px;
+        }
+
+        .status-active {
+            background: #000000;
+            color: #ffffff;
+        }
+
+        .status-idle {
+            background: #f5f5f5;
+            color: #6b6b6b;
+            border: 1px solid #e0e0e0;
+        }
+
+        .status-alert {
+            background: #ff0000;
+            color: #ffffff;
+        }
+
+        .component-details {
+            font-size: 13px;
+            color: #6b6b6b;
+            line-height: 1.5;
+        }
+
+        .component-details strong {
+            color: #1a1a1a;
+            font-weight: 500;
+        }
+
+        .room-container {
+            background: #0a0a0a;
+            border: 1px solid #e0e0e0;
+            aspect-ratio: 16/10;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .room-view {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(ellipse at center, #1a1a1a 0%, #000000 100%);
+        }
+
+        .ceiling {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: linear-gradient(180deg, #2a2a2a 0%, transparent 100%);
+        }
+
+        .led-fixture {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 180px;
+            height: 32px;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .led-strip {
+            width: 150px;
+            height: 16px;
+            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            padding: 0 4px;
+        }
+
+        .led-segment {
+            width: 20px;
+            height: 10px;
+            background: #1a1a1a;
+            transition: all 0.3s ease;
+        }
+
+        .light-glow {
+            position: absolute;
+            top: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 400px;
+            height: 400px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.15) 0%, transparent 70%);
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            pointer-events: none;
+            filter: blur(60px);
+        }
+
+        .person {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 50px;
+            height: 100px;
+            transition: opacity 0.5s ease;
+        }
+
+        .person-head {
+            width: 30px;
+            height: 30px;
+            background: #ffffff;
+            border-radius: 50%;
+            margin: 0 auto 4px;
+        }
+
+        .person-body {
+            width: 40px;
+            height: 60px;
+            background: #e0e0e0;
+            border-radius: 20px 20px 8px 8px;
+            margin: 0 auto;
+        }
+
+        .sensor-indicator {
+            position: absolute;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .pir-sensor {
+            top: 16px;
+            right: 24px;
+        }
+
+        .light-sensor {
+            top: 16px;
+            left: 24px;
+        }
+
+        .sensor-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #333;
+            transition: all 0.3s ease;
+        }
+
+        .metric-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1px;
+            background: #e0e0e0;
+            border: 1px solid #e0e0e0;
+            margin-bottom: 24px;
+        }
+
+        .metric-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            background: #ffffff;
+        }
+
+        .metric-label {
+            font-size: 13px;
+            color: #6b6b6b;
+            font-weight: 400;
+        }
+
+        .metric-value {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1a1a1a;
+            font-family: 'Courier New', monospace;
+        }
+
+        .metric-value.alert {
+            color: #ff0000;
+        }
+
+        .control-group {
+            margin-bottom: 24px;
+        }
+
+        .control-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 12px;
+            display: block;
+        }
+
+        .mode-selector {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1px;
+            background: #e0e0e0;
+            border: 1px solid #e0e0e0;
+        }
+
+        .mode-btn {
+            padding: 10px;
+            background: #ffffff;
+            border: none;
+            color: #6b6b6b;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .mode-btn:hover {
+            background: #fafafa;
+        }
+
+        .mode-btn.active {
+            background: #000000;
+            color: #ffffff;
+        }
+
+        .button-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1px;
+            background: #e0e0e0;
+            border: 1px solid #e0e0e0;
+            margin-bottom: 24px;
+        }
+
+        .btn {
+            padding: 12px;
+            background: #ffffff;
+            border: none;
+            color: #1a1a1a;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .btn:hover {
+            background: #000000;
+            color: #ffffff;
+        }
+
+        .btn-danger:hover {
+            background: #ff0000;
+            color: #ffffff;
+        }
+
+        .slider-container {
+            margin-bottom: 20px;
+        }
+
+        .slider-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .slider-label {
+            font-size: 12px;
+            color: #6b6b6b;
+            font-weight: 500;
+        }
+
+        .slider-value {
+            font-size: 12px;
+            font-weight: 600;
+            color: #1a1a1a;
+            font-family: 'Courier New', monospace;
+        }
+
+        .slider {
+            width: 100%;
+            height: 2px;
+            border-radius: 0;
+            background: #e0e0e0;
+            outline: none;
+            -webkit-appearance: none;
+            cursor: pointer;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 0;
+            background: #000000;
+            cursor: pointer;
+        }
+
+        .slider::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            border-radius: 0;
+            background: #000000;
+            cursor: pointer;
+            border: none;
+        }
+
+        .status-bar {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1px;
+            background: #e0e0e0;
+            border: 1px solid #e0e0e0;
+            margin-top: 24px;
+        }
+
+        .status-item {
+            background: #ffffff;
+            padding: 20px 16px;
+            text-align: center;
+        }
+
+        .status-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-bottom: 4px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .status-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #6b6b6b;
+            font-weight: 600;
+        }
+
+        .chart-container {
+            background: #fafafa;
+            border: 1px solid #e0e0e0;
+            padding: 24px;
+            margin-top: 24px;
+        }
+
+        .chart-canvas {
+            width: 100%;
+            height: 200px;
+        }
+
+        .log-panel {
+            background: #000000;
+            border: 1px solid #e0e0e0;
+            padding: 16px;
+            max-height: 240px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            line-height: 1.6;
+        }
+
+        .log-entry {
+            padding: 4px 0;
+            color: #a0a0a0;
+        }
+
+        .log-time {
+            color: #ff0000;
+            margin-right: 12px;
+        }
+
+        .log-message {
+            color: #e0e0e0;
+        }
+
+        .divider {
+            height: 1px;
+            background: #e0e0e0;
+            margin: 24px 0;
+        }
+
+        @media (max-width: 1400px) {
+            .main-grid {
+                grid-template-columns: 280px 1fr 320px;
+            }
+        }
+
+        @media (max-width: 1024px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .panel {
+                border-right: none;
+                border-bottom: 1px solid #e0e0e0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-content">
+                <h1>Intelligent Lighting Control System</h1>
+                <p>ESP32-based autonomous control with PID optimization</p>
+            </div>
+        </div>
+
+        <div class="main-grid">
+            <!-- Left Panel: Hardware -->
+            <div class="panel panel-left">
+                <div class="section-title">Hardware Components</div>
+                
+                <div class="component-card">
+                    <div class="component-header">
+                        <span class="component-name">ESP32 DevKit</span>
+                        <span class="status-badge status-active" id="esp32Status">ACTIVE</span>
+                    </div>
+                    <div class="component-details">
+                        Dual-core @ 240MHz<br>
+                        <strong>WiFi:</strong> Connected<br>
+                        <strong>Power:</strong> 5V / 180mA
+                    </div>
+                </div>
+
+                <div class="component-card">
+                    <div class="component-header">
+                        <span class="component-name">PIR Motion Sensor</span>
+                        <span class="status-badge status-idle" id="pirStatus">IDLE</span>
+                    </div>
+                    <div class="component-details">
+                        <strong>Model:</strong> HC-SR501<br>
+                        <strong>Range:</strong> 7m / 120°<br>
+                        <strong>Status:</strong> <span id="pirDetection">No motion</span><br>
+                        <strong>GPIO:</strong> Pin 34
+                    </div>
+                </div>
+
+                <div class="component-card">
+                    <div class="component-header">
+                        <span class="component-name">Light Sensor</span>
+                        <span class="status-badge status-active" id="lightSensorStatus">ACTIVE</span>
+                    </div>
+                    <div class="component-details">
+                        <strong>Model:</strong> VEML7700<br>
+                        <strong>I2C:</strong> 0x10<br>
+                        <strong>Reading:</strong> <span id="lightReading">0</span> lux<br>
+                        <strong>GPIO:</strong> SDA(21), SCL(22)
+                    </div>
+                </div>
+
+                <div class="component-card">
+                    <div class="component-header">
+                        <span class="component-name">LED Driver</span>
+                        <span class="status-badge status-idle" id="ledStatus">OFF</span>
+                    </div>
+                    <div class="component-details">
+                        <strong>Type:</strong> PWM MOSFET<br>
+                        <strong>Output:</strong> <span id="pwmOutput">0</span>%<br>
+                        <strong>Frequency:</strong> 5kHz<br>
+                        <strong>GPIO:</strong> Pin 25
+                    </div>
+                </div>
+
+                <div class="divider"></div>
+
+                <div class="section-title">GPIO Status</div>
+                <div class="metric-grid">
+                    <div class="metric-item">
+                        <span class="metric-label">GPIO 34 (PIR)</span>
+                        <span class="metric-value" id="gpio34">LOW</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">GPIO 21 (SDA)</span>
+                        <span class="metric-value" id="gpio21">HIGH</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">GPIO 25 (PWM)</span>
+                        <span class="metric-value" id="gpio25">0</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">GPIO 27 (Relay)</span>
+                        <span class="metric-value" id="gpio27">LOW</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Center Panel: Visualization -->
+            <div class="panel panel-center">
+                <div class="section-title">Room Visualization</div>
+                
+                <div class="room-container">
+                    <div class="room-view">
+                        <div class="ceiling"></div>
+                        
+                        <div class="led-fixture">
+                            <div class="led-strip">
+                                <div class="led-segment" id="led1"></div>
+                                <div class="led-segment" id="led2"></div>
+                                <div class="led-segment" id="led3"></div>
+                                <div class="led-segment" id="led4"></div>
+                                <div class="led-segment" id="led5"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="light-glow" id="lightGlow"></div>
+                        
+                        <div class="sensor-indicator pir-sensor">
+                            <div class="sensor-dot" id="pirDot"></div>
+                        </div>
+                        
+                        <div class="sensor-indicator light-sensor">
+                            <div class="sensor-dot" id="lightSensorDot"></div>
+                        </div>
+                        
+                        <div class="person" id="person" style="opacity: 0;">
+                            <div class="person-head"></div>
+                            <div class="person-body"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="status-bar">
+                    <div class="status-item">
+                        <div class="status-value" id="brightnessPercent">0%</div>
+                        <div class="status-label">Brightness</div>
+                    </div>
+                    <div class="status-item">
+                        <div class="status-value" id="powerUsage">2W</div>
+                        <div class="status-label">Power</div>
+                    </div>
+                    <div class="status-item">
+                        <div class="status-value" id="energySaved">0%</div>
+                        <div class="status-label">Saved</div>
+                    </div>
+                    <div class="status-item">
+                        <div class="status-value" id="currentMode">AUTO</div>
+                        <div class="status-label">Mode</div>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <canvas class="chart-canvas" id="performanceChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Right Panel: Controls -->
+            <div class="panel panel-right">
+                <div class="section-title">System Controls</div>
+                
+                <div class="control-group">
+                    <label class="control-label">Operating Mode</label>
+                    <div class="mode-selector">
+                        <button class="mode-btn active" onclick="setMode('AUTO')" id="modeAuto">Auto</button>
+                        <button class="mode-btn" onclick="setMode('MANUAL')" id="modeManual">Manual</button>
+                        <button class="mode-btn" onclick="setMode('ENERGY')" id="modeEnergy">Energy</button>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label class="control-label">Occupancy Simulation</label>
+                    <div class="button-grid">
+                        <button class="btn" onclick="toggleOccupancy(true)">Enter Room</button>
+                        <button class="btn btn-danger" onclick="toggleOccupancy(false)">Leave Room</button>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <div class="slider-container">
+                        <div class="slider-header">
+                            <span class="slider-label">Natural Light</span>
+                            <span class="slider-value" id="naturalLightValue">500 lux</span>
+                        </div>
+                        <input type="range" class="slider" id="naturalLightSlider" 
+                               min="0" max="10000" value="500" step="50">
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <div class="slider-container">
+                        <div class="slider-header">
+                            <span class="slider-label">Manual Override</span>
+                            <span class="slider-value" id="manualValue">0%</span>
+                        </div>
+                        <input type="range" class="slider" id="manualSlider" 
+                               min="0" max="100" value="0" step="1">
+                    </div>
+                </div>
+
+                <div class="divider"></div>
+
+                <div class="section-title">PID Controller Tuning</div>
+                
+                <div class="slider-container">
+                    <div class="slider-header">
+                        <span class="slider-label">Proportional Gain (Kp)</span>
+                        <span class="slider-value" id="kpValue">2.5</span>
+                    </div>
+                    <input type="range" class="slider" id="kpSlider" 
+                           min="0.1" max="5.0" value="2.5" step="0.1">
+                </div>
+
+                <div class="slider-container">
+                    <div class="slider-header">
+                        <span class="slider-label">Integral Gain (Ki)</span>
+                        <span class="slider-value" id="kiValue">0.50</span>
+                    </div>
+                    <input type="range" class="slider" id="kiSlider" 
+                           min="0.01" max="2.0" value="0.5" step="0.01">
+                </div>
+
+                <div class="slider-container">
+                    <div class="slider-header">
+                        <span class="slider-label">Derivative Gain (Kd)</span>
+                        <span class="slider-value" id="kdValue">0.8</span>
+                    </div>
+                    <input type="range" class="slider" id="kdSlider" 
+                           min="0.1" max="2.0" value="0.8" step="0.1">
+                </div>
+
+                <div class="divider"></div>
+
+                <div class="section-title">Real-time Metrics</div>
+                
+                <div class="metric-grid">
+                    <div class="metric-item">
+                        <span class="metric-label">Target Illumination</span>
+                        <span class="metric-value" id="targetLux">500 lux</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">Measured Illumination</span>
+                        <span class="metric-value" id="measuredLux">500 lux</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">Control Error</span>
+                        <span class="metric-value" id="errorValue">0 lux</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">FSM State</span>
+                        <span class="metric-value" id="fsmState">STANDBY</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">System Uptime</span>
+                        <span class="metric-value" id="uptime">00:00:00</span>
+                    </div>
+                </div>
+
+                <div class="divider"></div>
+
+                <div class="section-title">System Log</div>
+                <div class="log-panel" id="logPanel">
+                    <div class="log-entry">
+                        <span class="log-time">00:00:00</span>
+                        <span class="log-message">System initialized</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // System State
+        const system = {
+            mode: 'AUTO',
+            occupied: false,
+            naturalLight: 500,
+            targetLux: 500,
+            measuredLux: 500,
+            artificialLux: 0,
+            pwmOutput: 0,
+            fsmState: 'STANDBY',
+            pid: {
+                kp: 2.5,
+                ki: 0.5,
+                kd: 0.8,
+                integral: 0,
+                prevError: 0,
+                error: 0
+            },
+            startTime: Date.now(),
+            lastMotion: 0,
+            energyConsumed: 0,
+            energyBaseline: 0,
+            dataHistory: {
+                time: [],
+                error: [],
+                output: [],
+                lux: []
+            }
+        };
+
+        let animationFrame;
+        let chartContext;
+        const maxDataPoints = 100;
+
+        function init() {
+            setupEventListeners();
+            initChart();
+            startSimulation();
+            addLog('System initialized in AUTO mode');
+        }
+
+        function setupEventListeners() {
+            document.getElementById('naturalLightSlider').addEventListener('input', (e) => {
+                system.naturalLight = parseInt(e.target.value);
+                document.getElementById('naturalLightValue').textContent = system.naturalLight + ' lux';
+            });
+
+            document.getElementById('manualSlider').addEventListener('input', (e) => {
+                const value = parseInt(e.target.value);
+                document.getElementById('manualValue').textContent = value + '%';
+                if (system.mode === 'MANUAL') {
+                    system.pwmOutput = value;
+                }
+            });
+
+            document.getElementById('kpSlider').addEventListener('input', (e) => {
+                system.pid.kp = parseFloat(e.target.value);
+                document.getElementById('kpValue').textContent = system.pid.kp.toFixed(1);
+                addLog('PID Kp adjusted to ' + system.pid.kp.toFixed(1));
+            });
+
+            document.getElementById('kiSlider').addEventListener('input', (e) => {
+                system.pid.ki = parseFloat(e.target.value);
+                document.getElementById('kiValue').textContent = system.pid.ki.toFixed(2);
+                addLog('PID Ki adjusted to ' + system.pid.ki.toFixed(2));
+            });
+
+            document.getElementById('kdSlider').addEventListener('input', (e) => {
+                system.pid.kd = parseFloat(e.target.value);
+                document.getElementById('kdValue').textContent = system.pid.kd.toFixed(1);
+                addLog('PID Kd adjusted to ' + system.pid.kd.toFixed(1));
+            });
+        }
+
+        function setMode(mode) {
+            system.mode = mode;
+            document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('mode' + mode.charAt(0) + mode.slice(1).toLowerCase()).classList.add('active');
+            document.getElementById('currentMode').textContent = mode;
+            addLog('Mode changed to ' + mode);
+        }
+
+        function toggleOccupancy(occupied) {
+            system.occupied = occupied;
+            document.getElementById('person').style.opacity = occupied ? '1' : '0';
+            
+            if (occupied) {
+                system.lastMotion = Date.now();
+                addLog('Motion detected - occupancy TRUE');
+            } else {
+                addLog('Room vacated - occupancy FALSE');
+            }
+        }
+
+        function startSimulation() {
+            function loop() {
+                updateSystem();
+                render();
+                updateMetrics();
+                updateChart();
+                animationFrame = requestAnimationFrame(loop);
+            }
+            loop();
+        }
+
+        function updateSystem() {
+            const dt = 0.1; // 10Hz update rate
+            
+            // FSM State Machine
+            updateFSM(dt);
+            
+            // Determine target based on mode and FSM state
+            if (system.mode === 'MANUAL') {
+                system.targetLux = (document.getElementById('manualSlider').value / 100) * 500 + system.naturalLight;
+            } else {
+                if (system.fsmState === 'ACTIVE') {
+                    system.targetLux = 500;
+                } else {
+                    system.targetLux = 100;
+                }
+            }
+            
+            // Calculate required artificial light
+            const requiredArtificial = Math.max(0, system.targetLux - system.naturalLight);
+            
+            // PID Control
+            if (system.mode !== 'MANUAL') {
+                system.pid.error = system.targetLux - (system.naturalLight + system.artificialLux);
+                
+                const proportional = system.pid.kp * system.pid.error;
+                system.pid.integral += system.pid.error * dt;
+                system.pid.integral = Math.max(-50, Math.min(50, system
